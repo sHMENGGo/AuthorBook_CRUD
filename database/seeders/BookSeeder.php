@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\models\Book;
 use App\models\Author;
+use App\models\Book;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
 
 class BookSeeder extends Seeder
 {
@@ -19,7 +19,7 @@ class BookSeeder extends Seeder
         $authorIds = Author::pluck('id');
 
         Book::factory(50)->create([
-            'author_id' => fn ()=> $authorIds->random()
+            'author_id' => fn () => $authorIds->random(),
         ]);
     }
 }

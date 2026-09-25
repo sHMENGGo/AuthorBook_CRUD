@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Author;
 use App\Models\Book;
 use Illuminate\Http\Request;
-use App\Models\Author;
 
 class BookController extends Controller
 {
@@ -16,7 +16,7 @@ class BookController extends Controller
         $query = Book::with('author');
 
         if ($request->filled('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%');
+            $query->where('title', 'like', '%'.$request->search.'%');
         }
 
         if ($request->sort === 'asc') {
@@ -27,7 +27,7 @@ class BookController extends Controller
 
         $books = $query->get();
 
-        if($request->ajax()) {
+        if ($request->ajax()) {
             return view('books.indexTable', compact('books'));
         }
 
@@ -40,6 +40,7 @@ class BookController extends Controller
     public function create()
     {
         $authors = Author::orderBy('name')->get();
+
         return view('books.create', compact('authors'));
     }
 
@@ -64,11 +65,12 @@ class BookController extends Controller
             ],
         ],
 
-        [
-            'published_date.date_format' => 'Invalid date.',
-        ]);
+            [
+                'published_date.date_format' => 'Invalid date.',
+            ]);
 
         Book::create($validated);
+
         return redirect()->route('books.index')->with('success', 'Book created.');
     }
 
@@ -78,6 +80,7 @@ class BookController extends Controller
     public function show(Book $book)
     {
         $book->load('author');
+
         return view('books.show', compact('book'));
     }
 
@@ -87,6 +90,7 @@ class BookController extends Controller
     public function edit(Book $book)
     {
         $authors = Author::orderBy('name')->get();
+
         return view('books.edit', compact('book', 'authors'));
     }
 
@@ -96,7 +100,7 @@ class BookController extends Controller
     public function update(Request $request, Book $book)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255|unique:books,title' . $book->id,
+            'title' => 'required|string|max:255|unique:books,title'.$book->id,
             'author_id' => 'required|exists:authors,id',
             'published_date' => [
                 'required',
@@ -110,11 +114,12 @@ class BookController extends Controller
                 },
             ],
         ],
-        [
-            'published_date.date_format' => 'Invalid date.',
-        ]);
+            [
+                'published_date.date_format' => 'Invalid date.',
+            ]);
 
         $book->update($validated);
+
         return redirect()->route('books.index')->with('success', 'Book updated.');
     }
 
@@ -130,6 +135,7 @@ class BookController extends Controller
     public function destroy(Book $book)
     {
         $book->delete();
+
         return redirect()->route('books.index')->with('success', 'Book deleted.');
     }
 }

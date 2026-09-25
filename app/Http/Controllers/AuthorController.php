@@ -15,7 +15,7 @@ class AuthorController extends Controller
         $query = Author::query();
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%');
         }
 
         if ($request->sort === 'asc') {
@@ -29,6 +29,7 @@ class AuthorController extends Controller
         if ($request->ajax()) {
             return view('authors.indexTable', compact('authors'));
         }
+
         return view('authors.index', compact('authors'));
     }
 
@@ -47,14 +48,15 @@ class AuthorController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:authors,name',
-            'birth_date' => 'required|date_format:Y-m-d|before:today'
+            'birth_date' => 'required|date_format:Y-m-d|before:today',
         ],
 
-        [
-            'birth_date.date_format' => 'Invalid date.',
-        ]);
+            [
+                'birth_date.date_format' => 'Invalid date.',
+            ]);
 
         Author::create($validated);
+
         return redirect()->route('authors.index')->with('success', 'Author created.');
     }
 
@@ -64,6 +66,7 @@ class AuthorController extends Controller
     public function show(Author $author)
     {
         $author->load('books');
+
         return view('authors.show', compact('author'));
     }
 
@@ -74,22 +77,23 @@ class AuthorController extends Controller
     {
         return view('authors.edit', compact('author'));
     }
-    
+
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Author $author)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:authors,name' . $author->id,
+            'name' => 'required|string|max:255|unique:authors,name,'.$author->id,
             'birth_date' => 'required|date_format:Y-m-d|before:today',
         ],
 
-        [
-            'birth_date.date_format' => 'Invalid date.',
-        ]);
+            [
+                'birth_date.date_format' => 'Invalid date.',
+            ]);
 
         $author->update($validated);
+
         return redirect()->route('authors.index')->with('success', 'Author updated.');
     }
 
@@ -105,6 +109,7 @@ class AuthorController extends Controller
     public function destroy(Author $author)
     {
         $author->delete();
+
         return redirect()->route('authors.index')->with('success', 'Author deleted.');
     }
 }

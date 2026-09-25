@@ -1,6 +1,6 @@
 # Laravel Sample App
 
-This project is a Laravel application using the default Laravel stack with Vite for the frontend assets. It includes a basic author/book sample setup and uses SQLite by default for local development.
+This project is a Laravel application using the default Laravel stack with Vite for the frontend styling. It is a basic author/book Create, Read, Update, Delete (CRUD) operations and uses SQLite by default for local development.
 
 ## Requirements
 

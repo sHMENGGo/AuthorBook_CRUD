@@ -19,7 +19,7 @@ class BookFactory extends Factory
     {
         return [
             'title' => fake()->name(),
-            'published_date' => fake()->dateTimeBetween('-206 years', '-6 years')->format('Y-m-d')
+            'published_date' => fake()->dateTimeBetween('-206 years', '-6 years')->format('Y-m-d'),
         ];
     }
 }
