@@ -13,54 +13,92 @@
 
    @if (session('success'))
       <div id="success-toast"
-            class="absolute top-20 place-self-center z-50 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg shadow-lg transition-opacity duration-500">
+         class="absolute top-20 place-self-center z-50 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg shadow-lg transition-opacity duration-500">
          {{ session('success') }}
       </div>
       <script>
          setTimeout(() => {
-               const toast = document.getElementById('success-toast');
-               if (toast) {
-                  toast.style.opacity = '0';
-                  setTimeout(() => toast.remove(), 500);
-               }
+            const toast = document.getElementById('success-toast');
+            if (toast) {
+               toast.style.opacity = '0';
+               setTimeout(() => toast.remove(), 500);
+            }
          }, 2000);
       </script>
    @endif
 
-   <div class="bg-white rounded-xl shadow overflow-auto max-h-8/10 scrollbar-thin scrollbar-thumb-gray-300 border border-gray-300 ">
-      <table class="w-full text-left">
-         <thead class="bg-gray-50 border-b border-gray-200">
-               <tr>
-                  <th class="px-6 py-3 text-sm font-semibold text-gray-600 uppercase tracking-wide">Title</th>
-                  <th class="px-6 py-3 text-sm font-semibold text-gray-600 uppercase tracking-wide">Author</th>
-                  <th class="px-6 py-3 text-sm font-semibold text-gray-600 uppercase tracking-wide">Published</th>
-                  <th class="px-6 py-3 text-sm font-semibold text-gray-600 uppercase tracking-wide text-right">Actions</th>
-               </tr>
-         </thead>
-         <tbody class="divide-y divide-gray-200">
-               @forelse ($books as $book)
-                  <tr class="hover:bg-gray-100 cursor-pointer transition" onClick="window.location='{{ route('books.show', $book) }}'" >
-                     <td class="px-6 py-4 text-gray-800 font-medium">{{ $book->title }}</td>
-                     <td class="px-6 py-4 text-gray-600">{{ $book->author->name }}</td>
-                     <td class="px-6 py-4 text-gray-600">{{ $book->published_date?->format('F j, Y') }}</td>
-                     <td class="px-6 py-4 text-right space-x-3">
-                           <a href="{{ route('books.edit', $book) }}"
-                              class="inline-block text-blue-600 hover:text-blue-800 hover:underline">
-                              Edit
-                           </a>
-                           <a href="{{ route('books.remove', $book) }}" class=" text-red-600 hover:text-red-800 hover:underline">
-                              Delete
-                           </a>
-                     </td>
-                  </tr>
-               @empty
-                  <tr>
-                     <td colspan="3" class="px-6 py-10 text-center text-gray-400">
-                           No books yet — add your first one above.
-                     </td>
-                  </tr>
-               @endforelse
-         </tbody>
-      </table>
+   <form id="search-form" method="GET" action="{{ route('books.index') }}" class="flex items-start gap-3 mb-4">
+      <input type="text" name="search" id="search-input" value="{{ request('search') }}" placeholder="Search by title..."
+         class="w-1/3 border border-gray-300 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+      <input type="hidden" name="sort" id="sort-input" value="{{ request('sort') }}">
+
+      <button type="submit"
+         class="px-4 py-2 rounded-lg text-sm font-medium text-white hover:bg-gray-700 bg-gray-600 cursor-pointer transition">
+         Search
+      </button>
+
+      @php
+         $nextSort = request('sort') === 'asc' ? 'desc' : 'asc';
+      @endphp
+      <button type="submit" id="sort-button" name="sort" value="{{ $nextSort }}"
+         data-next-sort="{{ $nextSort }}"
+         class="inline-flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium text-white hover:bg-gray-700 bg-gray-600 cursor-pointer transition">
+         Title
+         <span id="sort-icon">
+            @if (request('sort') === 'asc')
+               &uarr;
+            @elseif (request('sort') === 'desc')
+               &darr;
+            @else
+               &#8597;
+            @endif
+         </span>
+      </button>
+   </form>
+
+   <div id="books-table" class="h-full" >
+      @include('books.indexTable', ['books' => $books])
    </div>
+
+   <script>
+      const form = document.getElementById('search-form');
+      const sortInput = document.getElementById('sort-input');
+      const sortButton = document.getElementById('sort-button');
+      const sortIcon = document.getElementById('sort-icon');
+      const tableContainer = document.getElementById('books-table');
+      const baseUrl = '{{ route('books.index') }}';
+
+      async function loadBooks(params) {
+         const response = await fetch(`${baseUrl}?${params.toString()}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+         });
+         const html = await response.text();
+         tableContainer.innerHTML = html;
+         history.pushState({}, '', `${baseUrl}?${params.toString()}`);
+      }
+
+      form.addEventListener('submit', function (e) {
+         e.preventDefault();
+         const params = new URLSearchParams(new FormData(form));
+         loadBooks(params);
+      });
+
+      sortButton.addEventListener('click', function (e) {
+         e.preventDefault();
+
+         const nextSort = sortButton.dataset.nextSort;
+         sortInput.value = nextSort;
+
+         const params = new URLSearchParams(new FormData(form));
+         params.set('sort', nextSort);
+
+         loadBooks(params).then(() => {
+            sortIcon.innerHTML = nextSort === 'asc' ? '&uarr;' : '&darr;';
+            const newNext = nextSort === 'asc' ? 'desc' : 'asc';
+            sortButton.dataset.nextSort = newNext;
+            sortButton.value = newNext;
+         });
+      });
+   </script>
 @endsection

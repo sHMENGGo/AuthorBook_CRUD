@@ -18,7 +18,7 @@ class BookSeeder extends Seeder
     {
         $authorIds = Author::pluck('id');
 
-        Book::factory(20)->create([
+        Book::factory(50)->create([
             'author_id' => fn ()=> $authorIds->random()
         ]);
     }

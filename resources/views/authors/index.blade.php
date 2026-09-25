@@ -27,41 +27,83 @@
       </script>
    @endif
 
-   <div class="bg-white rounded-xl shadow overflow-auto max-h-8/10 border border-gray-100">
-      <table class="w-full text-left">
-         <thead class="bg-gray-50 border-b border-gray-200">
-               <tr>
-                  <th class="px-6 py-3 text-sm font-semibold text-gray-600 uppercase tracking-wide">Name</th>
-                  <th class="px-6 py-3 text-sm font-semibold text-gray-600 uppercase tracking-wide">Birth Date</th>
-                  <th class="px-6 py-3 text-sm font-semibold text-gray-600 uppercase tracking-wide text-right">Actions</th>
-               </tr>
-         </thead>
-         <tbody class="divide-y divide-gray-200">
-            @forelse ($authors as $author)
-               <tr class="hover:bg-gray-100 cursor-pointer transition" onClick="window.location='{{ route('authors.show', $author) }}'" >
-                  <td class="px-6 py-4 text-gray-800 font-medium">{{ $author->name }}</td>
-                  <td class="px-6 py-4 text-gray-600">{{ $author->birth_date->format('F j, Y') }}</td>
-                  <td class="px-6 py-4 text-right space-x-3">
-                     <a href="{{ route('authors.edit', $author) }}"
-                        onclick="event.stopPropagation()"
-                        class="inline-block text-blue-600 hover:text-blue-800 hover:underline">
-                        Edit
-                     </a>
-                     <a href="{{ route('authors.remove', $author) }}" 
-                        onclick="event.stopPropagation()"
-                        class=" text-red-600 hover:text-red-800 hover:underline">
-                        Delete
-                     </a>
-                  </td>
-               </tr>
-            @empty
-               <tr>
-                  <td colspan="2" class="px-6 py-10 text-center text-gray-400">
-                     No authors yet — add your first one above.
-                  </td>
-               </tr>
-            @endforelse
-         </tbody>
-      </table>
+   <form id="search-form" method="GET" action="{{ route('authors.index') }}" class="flex items-start gap-3 mb-4">
+      <input type="text" name="search" id="search-input" value="{{ request('search') }}" placeholder="Search by name..."
+         class="w-1/3 border border-gray-300 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+      <input type="hidden" name="sort" id="sort-input" value="{{ request('sort') }}">
+
+      <button type="submit"
+         class="px-4 py-2 rounded-lg text-sm font-medium text-white hover:bg-gray-700 bg-gray-600 cursor-pointer transition">
+         Search
+      </button>
+
+      @php
+         $nextSort = request('sort') === 'asc' ? 'desc' : 'asc';
+      @endphp
+
+      <button type="submit" id="sort-button" name="sort" value="{{ $nextSort }}"
+         data-next-sort="{{ $nextSort }}"
+         class="inline-flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium text-white hover:bg-gray-700 bg-gray-600 cursor-pointer transition">
+         Name
+         <span id="sort-icon">
+            @if (request('sort') === 'asc')
+               &uarr;
+            @elseif (request('sort') === 'desc')
+               &darr;
+            @else
+               &#8597;
+            @endif
+         </span>
+      </button>
+   </form>
+
+   <div id="authors-table" class="h-full" >
+      @include('authors.indexTable', ['authors' => $authors])
    </div>
+
+   <script>
+      const form = document.getElementById('search-form');
+      const searchInput = document.getElementById('search-input');
+      const sortInput = document.getElementById('sort-input');
+      const sortButton = document.getElementById('sort-button');
+      const sortIcon = document.getElementById('sort-icon');
+      const tableContainer = document.getElementById('authors-table');
+      const baseUrl = '{{ route('authors.index') }}';
+
+      async function loadAuthors(params) {
+         const response = await fetch(`${baseUrl}?${params.toString()}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+         });
+         const html = await response.text();
+         tableContainer.innerHTML = html;
+         history.pushState({}, '', `${baseUrl}?${params.toString()}`);
+      }
+
+      // "Search" button / pressing Enter
+      form.addEventListener('submit', function (e) {
+         e.preventDefault();
+         const params = new URLSearchParams(new FormData(form));
+         loadAuthors(params);
+      });
+
+      // "Sort" button — toggles direction, then submits
+      sortButton.addEventListener('click', function (e) {
+         e.preventDefault();
+
+         const nextSort = sortButton.dataset.nextSort;
+         sortInput.value = nextSort;
+
+         const params = new URLSearchParams(new FormData(form));
+         params.set('sort', nextSort);
+
+         loadAuthors(params).then(() => {
+            // flip the icon and prep the next toggle
+            sortIcon.innerHTML = nextSort === 'asc' ? '&uarr;' : '&darr;';
+            const newNext = nextSort === 'asc' ? 'desc' : 'asc';
+            sortButton.dataset.nextSort = newNext;
+            sortButton.value = newNext;
+         });
+      });
+   </script>
 @endsection

@@ -10,9 +10,25 @@ class AuthorController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $authors = Author::all();
+        $query = Author::query();
+
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->sort === 'asc') {
+            $query->orderBy('name', 'asc');
+        } elseif ($request->sort === 'desc') {
+            $query->orderBy('name', 'desc');
+        }
+
+        $authors = $query->get();
+
+        if ($request->ajax()) {
+            return view('authors.indexTable', compact('authors'));
+        }
         return view('authors.index', compact('authors'));
     }
 
@@ -30,11 +46,15 @@ class AuthorController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'birth_date' => 'required|date|before:today'
-        ]);
-        Author::create($validated);
+            'name' => 'required|string|max:255|unique:authors,name',
+            'birth_date' => 'required|date_format:Y-m-d|before:today'
+        ],
 
+        [
+            'birth_date.date_format' => 'Invalid date.',
+        ]);
+
+        Author::create($validated);
         return redirect()->route('authors.index')->with('success', 'Author created.');
     }
 
@@ -61,12 +81,15 @@ class AuthorController extends Controller
     public function update(Request $request, Author $author)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'birth_date' => 'required|date|before:today',
+            'name' => 'required|string|max:255|unique:authors,name' . $author->id,
+            'birth_date' => 'required|date_format:Y-m-d|before:today',
+        ],
+
+        [
+            'birth_date.date_format' => 'Invalid date.',
         ]);
 
         $author->update($validated);
-
         return redirect()->route('authors.index')->with('success', 'Author updated.');
     }
 

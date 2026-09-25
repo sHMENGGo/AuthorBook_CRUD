@@ -15,8 +15,6 @@ class AuthorSeeder extends Seeder
      */
     public function run(): void
     {
-        Author::create(['name' => 'George Orwell', 'birth_date' => '1903-06-25']);
-        Author::create(['name' => 'Jane Austen', 'birth_date' => '1775-12-16']);
-        Author::create(['name' => 'Mark Twain', 'birth_date' => '1835-11-30']);
+        Author::factory(30)->create();
     }
 }
